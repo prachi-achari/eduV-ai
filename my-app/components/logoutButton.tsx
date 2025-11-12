@@ -9,7 +9,7 @@ export default function LogoutButton() {
 
   async function handleLogout() {
     await supabase.auth.signOut();
-    router.push("/login"); // redirect to login after logout
+    router.push("/dashboard"); // redirect to login after logout
   }
 
   return (
@@ -23,3 +23,4 @@ export default function LogoutButton() {
     </button>
   );
 }
+
