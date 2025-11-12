@@ -43,7 +43,7 @@ type UserProfile = {
   role: string;
   age: number | string;
   subject: string;
-  chatStyle: string;
+  chat_style: string;
   qualification?: string;
   email?: string;
 };
@@ -576,7 +576,7 @@ const ThreadWelcome: FC<{ variant?: "modern" | "classic"; userRole?: string; use
                 transition={{ delay: 0.7 }}
                 className="text-muted-foreground/50 text-sm mt-2"
               >
-                Ready to help with {userProfile.subject} in a {userProfile?.chatStyle?.toLowerCase() || "friendly"} style.
+                Ready to help with {userProfile.subject} in a {userProfile?.chat_style?.toLowerCase() || "friendly"} style.
               </motion.div>
             )}
           </div>
@@ -710,16 +710,14 @@ const Composer: FC<{ userRole?: string; variant?: "modern" | "classic"; userProf
   );
 };
 
+// Simple fix: Update the ComposerAction component
+// Find this component in your thread.tsx and replace it:
+
 const ComposerAction: FC<{ variant?: "modern" | "classic" }> = ({ variant = "modern" }) => {
   return (
-    <div className="bg-gray-50 relative flex items-center justify-between rounded-b-2xl border-x border-b p-3">
-      <TooltipIconButton
-        tooltip="Attach file"
-        variant="ghost"
-        className="hover:bg-gray-200 p-2.5 rounded-lg transition-colors"
-      >
-        <PlusIcon className="h-4 w-4 text-gray-600" />
-      </TooltipIconButton>
+    <div className="bg-gray-50 relative flex items-center justify-end rounded-b-2xl border-x border-b p-3">
+      {/* ❌ REMOVED: Attach file button */}
+      {/* <TooltipIconButton tooltip="Attach file" ... /> */}
 
       <ThreadPrimitive.If running={false}>
         <ComposerPrimitive.Send asChild>
@@ -747,16 +745,6 @@ const ComposerAction: FC<{ variant?: "modern" | "classic" }> = ({ variant = "mod
         </ComposerPrimitive.Cancel>
       </ThreadPrimitive.If>
     </div>
-  );
-};
-
-const MessageError: FC = () => {
-  return (
-    <MessagePrimitive.Error>
-      <ErrorPrimitive.Root className="border-destructive bg-destructive/10 text-destructive mt-2 rounded-md border p-3 text-sm">
-        <ErrorPrimitive.Message className="line-clamp-2" />
-      </ErrorPrimitive.Root>
-    </MessagePrimitive.Error>
   );
 };
 
@@ -798,7 +786,6 @@ const AssistantMessage: FC<{ variant?: "modern" | "classic"; userProfile?: UserP
               tools: { Fallback: ToolFallback },
             }}
           />
-          <MessageError />
         </div>
 
         <AssistantActionBar 
