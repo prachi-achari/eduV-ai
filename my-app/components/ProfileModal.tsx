@@ -14,7 +14,6 @@ interface ProfileModalProps {
   initialData?: UserProfile;
 }
 
-// Qualification options based on role
 const teacherQualifications = [
   "Bachelor's Degree",
   "Master's Degree",
@@ -50,7 +49,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     role: "student",
     age: "",
     subject: "",
-    chatStyle: "simple",
+    chat_style: "simple", // ✅ Changed from chatStyle to chat_style
     qualification: ""
   });
   
@@ -66,24 +65,21 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
 
   useEffect(() => {
     if (open) {
-      // Check if this is an existing profile
       if (initialData && initialData.id) {
         setIsExistingProfile(true);
         
-        // Store original data for comparison - ensure no null values
         const safeInitialData = {
           ...initialData,
           name: initialData.name || "",
           age: initialData.age || "",
           subject: initialData.subject || "",
-          chatStyle: initialData.chatStyle || "simple",
+          chat_style: initialData.chat_style || "simple", // ✅ Fixed
           qualification: initialData.qualification || ""
         };
         
         setOriginalProfile(safeInitialData);
         setProfile(safeInitialData);
         
-        // Parse qualification for student role
         if (safeInitialData.qualification && safeInitialData.role === "student") {
           const parts = safeInitialData.qualification.split(' - ');
           if (parts.length === 2) {
@@ -102,7 +98,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
           setOriginalGrade("");
         }
       } else {
-        // New profile
         setIsExistingProfile(false);
         setOriginalProfile(null);
         setOriginalEducationLevel("");
@@ -112,7 +107,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
           role: "student",
           age: "",
           subject: "",
-          chatStyle: "simple",
+          chat_style: "simple", // ✅ Fixed
           qualification: ""
         });
         setEducationLevel("");
@@ -122,7 +117,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     }
   }, [open, initialData]);
 
-  // Update qualification when education level or grade changes
   useEffect(() => {
     if (profile.role === "student") {
       if (educationLevel && grade) {
@@ -135,18 +129,16 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     }
   }, [educationLevel, grade, profile.role]);
 
-  // Check for changes to enable the update button
   useEffect(() => {
     if (!originalProfile || !isExistingProfile) {
       setHasChanges(false);
       return;
     }
 
-    // Check if any field has changed
     const hasNameChanged = profile.name !== originalProfile.name;
     const hasAgeChanged = profile.age !== originalProfile.age.toString();
     const hasSubjectChanged = profile.subject !== originalProfile.subject;
-    const hasChatStyleChanged = profile.chatStyle !== originalProfile.chatStyle;
+    const hasChatStyleChanged = profile.chat_style !== originalProfile.chat_style; // ✅ Fixed
     
     let hasQualificationChanged = false;
     let hasEducationLevelChanged = false;
@@ -169,31 +161,25 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     setHasChanges(changesExist);
   }, [profile, educationLevel, grade, originalProfile, originalEducationLevel, originalGrade, isExistingProfile]);
 
-  // Check if form is valid for saving
   const isFormValid = () => {
-    // Check required text fields
     if (!profile.name?.trim() || !profile.subject?.trim()) {
       return false;
     }
     
-    // Check age - must be a valid number between 5 and 100
     const ageNum = Number(profile.age);
     if (isNaN(ageNum) || ageNum < 5 || ageNum > 100) {
       return false;
     }
     
-    // Check chat style
-    if (!profile.chatStyle) {
+    if (!profile.chat_style) { // ✅ Fixed
       return false;
     }
     
-    // Check qualification based on role
     if (profile.role === "teacher") {
       if (!profile.qualification?.trim()) {
         return false;
       }
     } else {
-      // For students, check both education level and qualification
       if (!educationLevel?.trim() || !profile.qualification?.trim()) {
         return false;
       }
@@ -218,18 +204,19 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
         return;
       }
       
-      // Prepare the profile data
+      // ✅ Now using chat_style consistently
       const profileData = {
         name: profile.name,
         role: profile.role,
         age: Number(profile.age),
         subject: profile.subject,
-        chat_style: profile.chatStyle,
+        chat_style: profile.chat_style, // ✅ Fixed - matches database column
         qualification: profile.qualification,
         updated_at: new Date().toISOString(),
       };
       
-      // If we have an initialData with id, this is an update
+      console.log('Saving profile data:', profileData);
+      
       if (initialData?.id) {
         const { data, error } = await supabase
           .from('profiles')
@@ -238,10 +225,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase update error:', error);
+          throw error;
+        }
+        console.log('Profile updated successfully:', data);
         onSave(data as UserProfile);
       } else {
-        // This is a new profile creation
         const { data, error } = await supabase
           .from('profiles')
           .insert([
@@ -254,7 +244,11 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
           .select()
           .single();
           
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase insert error:', error);
+          throw error;
+        }
+        console.log('Profile created successfully:', data);
         onSave(data as UserProfile);
       }
     } catch (error) {
@@ -265,7 +259,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
     }
   };
 
-  // Get button disabled state
   const isButtonDisabled = () => {
     if (isLoading) return true;
     if (!isFormValid()) return true;
@@ -308,7 +301,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                   setProfile({ 
                     ...profile, 
                     role: newRole,
-                    qualification: "" // Reset qualification when role changes
+                    qualification: ""
                   });
                   setEducationLevel("");
                   setGrade("");
@@ -337,7 +330,6 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
               onChange={e => setProfile({ ...profile, subject: e.target.value })}
             />
             
-            {/* Conditional Qualification Fields Based on Role */}
             {profile.role === "teacher" ? (
               <>
                 <label className="block text-sm font-medium text-gray-700">Highest Qualification</label>
@@ -360,7 +352,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
                   value={educationLevel || ""}
                   onChange={e => {
                     setEducationLevel(e.target.value);
-                    setGrade(""); // Reset grade when education level changes
+                    setGrade("");
                   }}
                 >
                   <option value="">Select your education level</option>
@@ -392,12 +384,13 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
             <label className="block text-sm font-medium text-gray-700">Chat Style Preference</label>
             <select
               className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-              value={profile.chatStyle || "simple"}
-              onChange={e => setProfile({ ...profile, chatStyle: e.target.value })}
+              value={profile.chat_style || "simple"} // ✅ Fixed
+              onChange={e => setProfile({ ...profile, chat_style: e.target.value })} // ✅ Fixed
             >
               <option value="simple">Simple & Friendly</option>
               <option value="academic">Academic & Detailed</option>
               <option value="conversational">Conversational</option>
+              <option value="wise">Wise & Reflective</option>
             </select>
           </div>
           
@@ -417,21 +410,9 @@ const ProfileModal: React.FC<ProfileModalProps> = ({
               {isLoading ? 'Saving...' : (isExistingProfile ? 'Update Profile' : 'Save Profile')}
             </button>
           </div>
-          
-          {/* Debug info - remove in production */}
-          {/* <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-            <p>Has Changes: {hasChanges ? "YES" : "NO"}</p>
-            <p>Form Valid: {isFormValid() ? "YES" : "NO"}</p>
-            <p>Button Disabled: {isButtonDisabled() ? "YES" : "NO"}</p>
-            <p>Name: {profile.name}</p>
-            <p>Age: {profile.age}</p>
-            <p>Subject: {profile.subject}</p>
-            <p>Qualification: {profile.qualification}</p>
-          </div> */}
         </motion.div>
       </div>
       
-      {/* Move LogoutButton outside the modal container */}
       <div className="fixed bottom-6 right-6 z-50">
         <LogoutButton />
       </div>
